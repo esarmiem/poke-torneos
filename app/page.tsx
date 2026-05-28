@@ -16,7 +16,8 @@ import {
   Swords, 
   Calendar,
   ArrowRight,
-  Plus
+  Plus,
+  BookOpen
 } from "lucide-react";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
@@ -67,14 +68,25 @@ export default function HomePage() {
           Gestiona torneos Pokémon TCG con emparejamientos Swiss, 
           standings en tiempo real y persistencia offline.{" "}
         </p>
-        <Button 
-          size="lg" 
-          onClick={() => router.push("/setup")}
-          className="gap-2"
-        >
-          <Plus className="w-5 h-5" />
-          Crear Nuevo Torneo
-        </Button>
+        <div className="flex flex-col sm:flex-row gap-3 justify-center">
+          <Button 
+            size="lg" 
+            onClick={() => router.push("/setup")}
+            className="gap-2"
+          >
+            <Plus className="w-5 h-5" />
+            Crear Nuevo Torneo
+          </Button>
+          <Button 
+            variant="outline"
+            size="lg" 
+            onClick={() => router.push("/guide")}
+            className="gap-2"
+          >
+            <BookOpen className="w-5 h-5" />
+            Guía para Administradores
+          </Button>
+        </div>
       </div>
     );
   }
