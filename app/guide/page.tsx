@@ -98,13 +98,13 @@ export default function GuidePage() {
           <div className="p-4 bg-slate-50 rounded-lg">
             <h3 className="font-semibold text-slate-900 flex items-center gap-2">
               <Target className="w-4 h-4 text-green-600" />
-              Opponents' Win % (Porcentaje de Victoria de Oponentes)
+              Opponents&apos; Win % (Porcentaje de Victoria de Oponentes)
             </h3>
             <p className="text-slate-600 mt-1 text-sm">
               Es el primer criterio de desempate. Se calcula promediando el porcentaje 
               de victorias de todos los oponentes contra los que has jugado. 
               Sirve para diferenciar jugadores con los mismos puntos: si jugaste 
-              contra oponentes más fuertes (que ganaron más), tendrás un porcentaje más alto.
+              contra oponentes m&aacute;s fuertes (que ganaron m&aacute;s), tendr&aacute;s un porcentaje m&aacute;s alto.
             </p>
           </div>
 
@@ -114,10 +114,10 @@ export default function GuidePage() {
               BYE (Descanso)
             </h3>
             <p className="text-slate-600 mt-1 text-sm">
-              Cuando hay un número impar de jugadores, uno de ellos recibe un "BYE" 
-              (descanso automático). Esto significa que no juega esa ronda pero 
+              Cuando hay un n&uacute;mero impar de jugadores, uno de ellos recibe un &quot;BYE&quot; 
+              (descanso autom&aacute;tico). Esto significa que no juega esa ronda pero 
               recibe 3 puntos (como si hubiera ganado). Normalmente se asigna al 
-              jugador con menos puntos que aún no ha recibido BYE.
+              jugador con menos puntos que a&uacute;n no ha recibido BYE.
             </p>
           </div>
 
@@ -127,10 +127,10 @@ export default function GuidePage() {
               Drop (Abandono)
             </h3>
             <p className="text-slate-600 mt-1 text-sm">
-              Un jugador puede "hacer drop" (abandonar) el torneo en cualquier momento. 
-              Esto significa que ya no jugará más rondas. Sus resultados anteriores 
-              se mantienen, pero no aparecerá en los emparejamientos futuros. 
-              Esto es útil si alguien debe irse antes de que termine el torneo.
+              Un jugador puede &quot;hacer drop&quot; (abandonar) el torneo en cualquier momento. 
+              Esto significa que ya no jugar&aacute; m&aacute;s rondas. Sus resultados anteriores 
+              se mantienen, pero no aparecer&aacute; en los emparejamientos futuros. 
+              Esto es &uacute;til si alguien debe irse antes de que termine el torneo.
             </p>
           </div>
         </div>
@@ -149,9 +149,9 @@ export default function GuidePage() {
             <div>
               <h3 className="font-semibold text-slate-900">Crear el Torneo</h3>
               <p className="text-slate-600 text-sm mt-1">
-                Ve a "Configuración" y crea un nuevo torneo. Elige un nombre descriptivo 
-                (ej: "Torneo Liga Play - 25 Mayo"). Configura el tiempo por ronda 
-                (normalmente 50 minutos para Pokémon TCG).
+                Ve a &quot;Configuraci&oacute;n&quot; y crea un nuevo torneo. Elige un nombre descriptivo 
+                (ej: &quot;Torneo Liga Play - 25 Mayo&quot;). Configura el tiempo por ronda 
+                (normalmente 50 minutos para Pok&eacute;mon TCG).
               </p>
             </div>
           </div>
@@ -161,10 +161,10 @@ export default function GuidePage() {
             <div>
               <h3 className="font-semibold text-slate-900">Registrar Jugadores</h3>
               <p className="text-slate-600 text-sm mt-1">
-                En la misma página de "Configuración", agrega todos los jugadores. 
+                En la misma p&aacute;gina de &quot;Configuraci&oacute;n&quot;, agrega todos los jugadores. 
                 Solo el nombre es obligatorio, pero puedes agregar ID de jugador, 
-                división (Juniors/Seniors/Masters), y el deck que van a usar. 
-                Cuando tengas al menos 2 jugadores, haz clic en "Iniciar Torneo".
+                divisi&oacute;n (Juniors/Seniors/Masters), y el deck que van a usar. 
+                Cuando tengas al menos 2 jugadores, haz clic en &quot;Iniciar Torneo&quot;.
               </p>
             </div>
           </div>
@@ -174,10 +174,10 @@ export default function GuidePage() {
             <div>
               <h3 className="font-semibold text-slate-900">Crear Rondas y Emparejamientos</h3>
               <p className="text-slate-600 text-sm mt-1">
-                Ve a la sección "Rondas" y haz clic en "Crear Primera Ronda". 
-                El sistema automáticamente emparejará a los jugadores (aleatorio en 
-                la primera ronda, por puntos en las siguientes). Si hay un número 
-                impar de jugadores, uno recibirá BYE automáticamente.
+                Ve a la secci&oacute;n &quot;Rondas&quot; y haz clic en &quot;Crear Primera Ronda&quot;. 
+                El sistema autom&aacute;ticamente emparejar&aacute; a los jugadores (aleatorio en 
+                la primera ronda, por puntos en las siguientes). Si hay un n&uacute;mero 
+                impar de jugadores, uno recibir&aacute; BYE autom&aacute;ticamente.
               </p>
             </div>
           </div>
@@ -201,9 +201,9 @@ export default function GuidePage() {
             <div>
               <h3 className="font-semibold text-slate-900">Ver Clasificación</h3>
               <p className="text-slate-600 text-sm mt-1">
-                La sección "Clasificación" muestra la tabla de standings actualizada 
+                La secci&oacute;n &quot;Clasificaci&oacute;n&quot; muestra la tabla de standings actualizada 
                 en tiempo real. Muestra: Rank, Jugador, Puntos, Record (Victorias-Derrotas-Empates), 
-                y Opponents' Win % (desempate). Puedes exportar la tabla a CSV para 
+                y Opponents&apos; Win % (desempate). Puedes exportar la tabla a CSV para 
                 compartir o imprimir.
               </p>
             </div>
@@ -315,14 +315,14 @@ export default function GuidePage() {
 
           <div className="border-b border-slate-100 pb-4">
             <h3 className="font-semibold text-slate-900 mb-2">
-              ¿Qué significa "Opp Win %" y por qué es importante?
+              &iquest;Qu&eacute; significa &quot;Opp Win %&quot; y por qu&eacute; es importante?
             </h3>
             <p className="text-slate-600 text-sm">
-              "Opp Win %" (Opponents' Win Percentage) es el porcentaje de victorias de tus oponentes. 
+              &quot;Opp Win %&quot; (Opponents&apos; Win Percentage) es el porcentaje de victorias de tus oponentes. 
               Es el principal criterio de desempate. Sirve para diferenciar jugadores con los mismos puntos: 
-              si jugaste contra oponentes que ganaron más partidas, tu Opp Win % será más alto, 
-              lo que indica que tuviste una ruta más difícil. Esto premia a quienes enfrentaron 
-              competencia más fuerte.
+              si jugaste contra oponentes que ganaron m&aacute;s partidas, tu Opp Win % ser&aacute; m&aacute;s alto, 
+              lo que indica que tuviste una ruta m&aacute;s dif&iacute;cil. Esto premia a quienes enfrentaron 
+              competencia m&aacute;s fuerte.
             </p>
           </div>
 

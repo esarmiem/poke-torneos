@@ -6,6 +6,7 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import { Navigation } from "@/components/Navigation";
+import { PokemonWidget } from "@/components/PokemonWidget";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -31,6 +32,7 @@ export default function RootLayout({
         <main className="container mx-auto px-4 py-6">
           {children}
         </main>
+        <PokemonWidget />
       </body>
     </html>
   );
