@@ -74,7 +74,6 @@ export default function HomePage() {
         >
           <Plus className="w-5 h-5" />
           Crear Nuevo Torneo
-          <PokemonSprite {...sprites.snorlax} size="md" className="ml-1" />
         </Button>
       </div>
     );
