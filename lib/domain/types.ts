@@ -20,9 +20,19 @@ export type MatchResult = "P1_WIN" | "P2_WIN" | "TIE" | "P1_BYE" | "P2_BYE" | nu
 // Estado de un match
 export type MatchStatus = "PAIRED" | "PLAYING" | "DONE";
 
+// Estado de un game individual (dentro de un match Bo3)
+export type GameStatus = "PENDING" | "PLAYING" | "DONE";
+
 // ============================================
 // ENTIDADES PRINCIPALES
 // ============================================
+
+export interface Game {
+  id: string;
+  gameNumber: number; // 1, 2, o 3
+  result: MatchResult; // P1_WIN, P2_WIN, TIE (no incluye BYE)
+  status: GameStatus;
+}
 
 export interface Player {
   id: string;
@@ -44,6 +54,8 @@ export interface Match {
   status: MatchStatus;
   // Campos para calcular tiebreakers
   roundNumber: number;
+  // Games individuales para modo Mejor de 3
+  games: Game[];
 }
 
 export interface Round {
@@ -61,6 +73,7 @@ export interface TournamentSettings {
   pointsLoss: number;
   topCutSize?: number;
   roundTimeMinutes: number;
+  isBestOfThree: boolean;
 }
 
 export interface Tournament {

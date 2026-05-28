@@ -36,6 +36,7 @@ export default function RoundDetailPage({ params }: RoundDetailPageProps) {
     tournament, 
     setMatchResult, 
     updateMatchStatus,
+    setGameResult,
     startRound,
     endRound,
     roundTimerStart,
@@ -247,35 +248,104 @@ export default function RoundDetailPage({ params }: RoundDetailPageProps) {
             </div>
             
             {/* Selector de resultado */}
-            {match.player2Id && ( // No mostrar para byes
+            {match.player2Id && (
               <div className="mt-4 pt-4 border-t border-slate-200">
-                <div className="flex flex-wrap gap-2">
-                  {resultOptions.map((option) => (
+                {tournament.settings.isBestOfThree && match.games.length > 0 ? (
+                  <div className="space-y-3">
+                    <p className="text-sm font-medium text-slate-700">
+                      Games - Mejor de 3
+                    </p>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                      {match.games.map((game) => (
+                        <div 
+                          key={game.id}
+                          className={cn(
+                            "p-3 rounded-lg border",
+                            game.status === "DONE" 
+                              ? game.result === "P1_WIN" 
+                                ? "bg-blue-50 border-blue-200"
+                                : game.result === "P2_WIN"
+                                  ? "bg-green-50 border-green-200"
+                                  : "bg-amber-50 border-amber-200"
+                              : "bg-slate-50 border-slate-200"
+                          )}
+                        >
+                          <p className="text-xs font-medium text-slate-500 mb-2">
+                            Game {game.gameNumber}
+                          </p>
+                          {game.status === "DONE" ? (
+                            <p className={cn(
+                              "font-semibold",
+                              game.result === "P1_WIN" ? "text-blue-700" :
+                              game.result === "P2_WIN" ? "text-green-700" :
+                              "text-amber-700"
+                            )}>
+                              {game.result === "P1_WIN" ? `${getPlayerName(match.player1Id)} Gana` :
+                               game.result === "P2_WIN" ? `${getPlayerName(match.player2Id!)} Gana` :
+                               "Empate"}
+                            </p>
+                          ) : (
+                            <div className="flex gap-1">
+                              <button
+                                onClick={() => setGameResult(round.id, match.id, game.id, "P1_WIN")}
+                                className="flex-1 px-2 py-1 text-xs bg-blue-100 hover:bg-blue-200 text-blue-700 rounded transition-colors"
+                              >
+                                {getPlayerName(match.player1Id).slice(0, 8)}
+                              </button>
+                              <button
+                                onClick={() => setGameResult(round.id, match.id, game.id, "TIE")}
+                                className="flex-1 px-2 py-1 text-xs bg-amber-100 hover:bg-amber-200 text-amber-700 rounded transition-colors"
+                              >
+                                Emp
+                              </button>
+                              <button
+                                onClick={() => setGameResult(round.id, match.id, game.id, "P2_WIN")}
+                                className="flex-1 px-2 py-1 text-xs bg-green-100 hover:bg-green-200 text-green-700 rounded transition-colors"
+                              >
+                                {getPlayerName(match.player2Id!).slice(0, 8)}
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                    {match.status === "DONE" && (
+                      <p className="text-sm font-medium text-center text-slate-600 mt-2">
+                        Match: {match.result === "P1_WIN" ? `${getPlayerName(match.player1Id)} gana el match` :
+                         match.result === "P2_WIN" ? `${getPlayerName(match.player2Id)} gana el match` :
+                         "Empate"}
+                      </p>
+                    )}
+                  </div>
+                ) : (
+                  <div className="flex flex-wrap gap-2">
+                    {resultOptions.map((option) => (
+                      <button
+                        key={option.value}
+                        onClick={() => setMatchResult(round.id, match.id, option.value)}
+                        className={cn(
+                          "px-3 py-1.5 rounded-md text-sm font-medium transition-colors",
+                          match.result === option.value
+                            ? option.color
+                            : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                        )}
+                      >
+                        {option.label}
+                      </button>
+                    ))}
                     <button
-                      key={option.value}
-                      onClick={() => setMatchResult(round.id, match.id, option.value)}
+                      onClick={() => setMatchResult(round.id, match.id, null)}
                       className={cn(
                         "px-3 py-1.5 rounded-md text-sm font-medium transition-colors",
-                        match.result === option.value
-                          ? option.color
-                          : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                        match.result === null
+                          ? "bg-slate-200 text-slate-800"
+                          : "bg-slate-50 text-slate-400 hover:bg-slate-100"
                       )}
                     >
-                      {option.label}
+                      Limpiar
                     </button>
-                  ))}
-                  <button
-                    onClick={() => setMatchResult(round.id, match.id, null)}
-                    className={cn(
-                      "px-3 py-1.5 rounded-md text-sm font-medium transition-colors",
-                      match.result === null
-                        ? "bg-slate-200 text-slate-800"
-                        : "bg-slate-50 text-slate-400 hover:bg-slate-100"
-                    )}
-                  >
-                    Limpiar
-                  </button>
-                </div>
+                  </div>
+                )}
               </div>
             )}
           </Card>

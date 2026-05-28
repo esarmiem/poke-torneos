@@ -25,6 +25,17 @@ export const MatchResultSchema = z.enum([
   "P2_BYE",
 ]).nullable();
 
+// Estado de un game individual
+export const GameStatusSchema = z.enum(["PENDING", "PLAYING", "DONE"]);
+
+// Game individual (dentro de un match Bo3)
+export const GameSchema = z.object({
+  id: z.string(),
+  gameNumber: z.number().int().min(1).max(3),
+  result: MatchResultSchema,
+  status: GameStatusSchema,
+});
+
 // Estado de un match
 export const MatchStatusSchema = z.enum(["PAIRED", "PLAYING", "DONE"]);
 
@@ -49,6 +60,7 @@ export const MatchSchema = z.object({
   result: MatchResultSchema,
   status: MatchStatusSchema,
   roundNumber: z.number().int().positive(),
+  games: z.array(GameSchema).default([]),
 });
 
 // Ronda
@@ -68,6 +80,7 @@ export const TournamentSettingsSchema = z.object({
   pointsLoss: z.number().int().default(0),
   topCutSize: z.number().int().optional(),
   roundTimeMinutes: z.number().int().default(50),
+  isBestOfThree: z.boolean().default(false),
 });
 
 // Torneo completo

@@ -18,6 +18,34 @@ import type {
 
 import { generateSwissPairings } from "@/lib/domain/pairings";
 import { calculateStandings, type StandingsOptions } from "@/lib/domain/standings";
+import type { Game } from "@/lib/domain/types";
+
+// ============================================
+// HELPERS
+// ============================================
+
+function calculateMatchResultFromGames(games: Game[]): MatchResult {
+  if (games.length === 0) return null;
+  
+  const completedGames = games.filter(g => g.status === "DONE" && g.result !== "TIE");
+  
+  let p1Wins = 0;
+  let p2Wins = 0;
+  
+  for (const game of completedGames) {
+    if (game.result === "P1_WIN") p1Wins++;
+    if (game.result === "P2_WIN") p2Wins++;
+  }
+  
+  if (p1Wins >= 2) return "P1_WIN";
+  if (p2Wins >= 2) return "P2_WIN";
+  
+  if (games.length >= 3 && p1Wins + p2Wins < 2) {
+    return "TIE";
+  }
+  
+  return null;
+}
 
 // ============================================
 // ESTADO DEL STORE
@@ -74,6 +102,9 @@ interface TournamentActions {
   setMatchResult: (roundId: string, matchId: string, result: MatchResult) => void;
   
   updateMatchStatus: (roundId: string, matchId: string, status: Match["status"]) => void;
+  
+  // Gestión de games (para Best of 3)
+  setGameResult: (roundId: string, matchId: string, gameId: string, result: MatchResult) => void;
   
   // Timer de ronda
   startTimer: () => void;
@@ -329,8 +360,16 @@ export const useTournamentStore = create<TournamentState & TournamentActions>()(
         });
         
         // Crear matches
+        const isBestOfThree = tournament.settings.isBestOfThree;
         const matches: Match[] = pairingsResult.matches.map((pairing: { player1: Player; player2: Player | null }, index: number) => {
           const isBye = pairing.player2 === null;
+          
+          // Si es Best of 3 y no es bye, crear 3 games
+          const games = isBye ? [] : (isBestOfThree ? [
+            { id: nanoid(), gameNumber: 1, result: null as MatchResult, status: "PENDING" as const },
+            { id: nanoid(), gameNumber: 2, result: null as MatchResult, status: "PENDING" as const },
+            { id: nanoid(), gameNumber: 3, result: null as MatchResult, status: "PENDING" as const },
+          ] : []);
           
           return {
             id: nanoid(),
@@ -340,6 +379,7 @@ export const useTournamentStore = create<TournamentState & TournamentActions>()(
             result: isBye ? "P1_BYE" : null,
             status: isBye ? "DONE" : "PAIRED",
             roundNumber: nextRoundNumber,
+            games,
           };
         });
         
@@ -498,6 +538,75 @@ export const useTournamentStore = create<TournamentState & TournamentActions>()(
             }),
             updatedAt: new Date().toISOString(),
           },
+        });
+      },
+      
+      setGameResult: (roundId, matchId, gameId, result) => {
+        const { tournament } = get();
+        if (!tournament) return;
+        
+        // No permitir resultados de BYE para games individuales
+        if (result === "P1_BYE" || result === "P2_BYE" || result === null) return;
+        
+        set({
+          tournament: {
+            ...tournament,
+            rounds: tournament.rounds.map(r => {
+              if (r.id !== roundId) return r;
+              
+              return {
+                ...r,
+                matches: r.matches.map(m => {
+                  if (m.id !== matchId) return m;
+                  
+                  // Buscar si el game ya existe
+                  const existingGameIndex = m.games.findIndex(g => g.id === gameId);
+                  
+                  if (existingGameIndex >= 0) {
+                    // Actualizar game existente
+                    const updatedGames = [...m.games];
+                    updatedGames[existingGameIndex] = {
+                      ...updatedGames[existingGameIndex],
+                      result,
+                      status: "DONE",
+                    };
+                    
+                    // Calcular resultado del match
+                    const matchResult = calculateMatchResultFromGames(updatedGames);
+                    const isMatchComplete = matchResult !== null;
+                    
+                    return {
+                      ...m,
+                      games: updatedGames,
+                      result: matchResult,
+                      status: isMatchComplete ? "DONE" : "PLAYING",
+                    };
+                  } else {
+                    // Crear nuevo game
+                    const newGame = {
+                      id: gameId,
+                      gameNumber: m.games.length + 1,
+                      result,
+                      status: "DONE" as const,
+                    };
+                    
+                    const updatedGames = [...m.games, newGame];
+                    const matchResult = calculateMatchResultFromGames(updatedGames);
+                    const isMatchComplete = matchResult !== null;
+                    
+                    return {
+                      ...m,
+                      games: updatedGames,
+                      result: matchResult,
+                      status: isMatchComplete ? "DONE" : "PLAYING",
+                    };
+                  }
+                }),
+              };
+            }),
+            updatedAt: new Date().toISOString(),
+          },
+          error: null,
         });
       },
       
@@ -726,6 +835,7 @@ export const useTournamentStore = create<TournamentState & TournamentActions>()(
             result: null,
             status: "PAIRED",
             roundNumber: nextRoundNumber,
+            games: [],
           });
         }
         
@@ -740,6 +850,7 @@ export const useTournamentStore = create<TournamentState & TournamentActions>()(
             result: "P1_BYE",
             status: "DONE",
             roundNumber: nextRoundNumber,
+            games: [],
           });
         }
         

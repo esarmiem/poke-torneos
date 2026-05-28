@@ -48,6 +48,7 @@ export default function SetupPage() {
     pointsWin: 3,
     pointsTie: 1,
     pointsLoss: 0,
+    isBestOfThree: false,
   });
   
   // Estado para nuevo jugador
@@ -77,6 +78,7 @@ export default function SetupPage() {
         pointsTie: tournamentConfig.pointsTie,
         pointsLoss: tournamentConfig.pointsLoss,
         roundTimeMinutes: tournamentConfig.roundTimeMinutes,
+        isBestOfThree: tournamentConfig.isBestOfThree,
       },
     });
   };
@@ -163,6 +165,24 @@ export default function SetupPage() {
                 value={tournamentConfig.roundTimeMinutes}
                 onChange={(e) => setTournamentConfig(prev => ({ ...prev, roundTimeMinutes: parseInt(e.target.value) || 50 }))}
               />
+            </div>
+            
+            <div className="flex items-center gap-3 p-4 bg-purple-50 rounded-lg border border-purple-200">
+              <input
+                type="checkbox"
+                id="bestOfThree"
+                checked={tournamentConfig.isBestOfThree}
+                onChange={(e) => setTournamentConfig(prev => ({ ...prev, isBestOfThree: e.target.checked }))}
+                className="w-5 h-5 rounded border-purple-300 text-purple-600 focus:ring-purple-500"
+              />
+              <div>
+                <Label htmlFor="bestOfThree" className="text-purple-900 font-medium cursor-pointer">
+                  Mejor de 3 (Best of 3)
+                </Label>
+                <p className="text-sm text-purple-700 mt-0.5">
+                  Cada ronda tendrá 3 duelos. Gana el mejor de 3.
+                </p>
+              </div>
             </div>
             
             {error && (
