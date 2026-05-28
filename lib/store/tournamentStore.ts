@@ -93,18 +93,23 @@ interface TournamentActions {
   
   // Gestión de rondas
   createRound: () => void;
-  
+  createManualRound: (pairings: Array<{ player1Id: string; player2Id: string | null }>) => void;
+  cancelRound: (roundId: string) => void;
+
   startRound: (roundId: string) => void;
-  
+
   endRound: (roundId: string) => void;
-  
+
   // Gestión de matches
   setMatchResult: (roundId: string, matchId: string, result: MatchResult) => void;
-  
+
   updateMatchStatus: (roundId: string, matchId: string, status: Match["status"]) => void;
-  
+
   // Gestión de games (para Best of 3)
   setGameResult: (roundId: string, matchId: string, gameId: string, result: MatchResult) => void;
+
+  // Third place match
+  setPlayThirdPlaceMatch: (playThirdPlace: boolean) => void;
   
   // Timer de ronda
   startTimer: () => void;
@@ -401,7 +406,93 @@ export const useTournamentStore = create<TournamentState & TournamentActions>()(
           error: null,
         });
       },
-      
+
+      createManualRound: (pairings) => {
+        const { tournament } = get();
+        if (!tournament) return;
+
+        const nextRoundNumber = tournament.rounds.length + 1;
+
+        const isBestOfThree = tournament.settings.isBestOfThree;
+        const matches: Match[] = pairings.map((pairing, index) => {
+          const isBye = pairing.player2Id === null;
+
+          const games = isBye ? [] : (isBestOfThree ? [
+            { id: nanoid(), gameNumber: 1, result: null as MatchResult, status: "PENDING" as const },
+            { id: nanoid(), gameNumber: 2, result: null as MatchResult, status: "PENDING" as const },
+            { id: nanoid(), gameNumber: 3, result: null as MatchResult, status: "PENDING" as const },
+          ] : []);
+
+          return {
+            id: nanoid(),
+            table: index + 1,
+            player1Id: pairing.player1Id,
+            player2Id: pairing.player2Id,
+            result: isBye ? "P1_BYE" : null,
+            status: isBye ? "DONE" : "PAIRED",
+            roundNumber: nextRoundNumber,
+            games,
+          };
+        });
+
+        const newRound: Round = {
+          id: nanoid(),
+          number: nextRoundNumber,
+          matches,
+          isComplete: false,
+        };
+
+        set({
+          tournament: {
+            ...tournament,
+            rounds: [...tournament.rounds, newRound],
+            currentRound: nextRoundNumber,
+            updatedAt: new Date().toISOString(),
+          },
+          error: null,
+        });
+      },
+
+      cancelRound: (roundId) => {
+        const { tournament } = get();
+        if (!tournament) return;
+
+        const roundIndex = tournament.rounds.findIndex(r => r.id === roundId);
+        if (roundIndex === -1) return;
+
+        // Solo permitir cancelar si no ha terminado o si es la última ronda
+        const round = tournament.rounds[roundIndex];
+        if (round.isComplete) {
+          set({ error: "No se puede cancelar una ronda que ya ha terminado" });
+          return;
+        }
+
+        // Verificar que no sea la única ronda con matches jugados
+        const hasPlayedMatches = round.matches.some(m => m.status === "DONE");
+        if (hasPlayedMatches && roundIndex < tournament.rounds.length - 1) {
+          set({ error: "No se puede cancelar una ronda con matches ya jugados" });
+          return;
+        }
+
+        // Eliminar la ronda
+        const newRounds = tournament.rounds.filter(r => r.id !== roundId);
+
+        // Re numerar las rondas restantes
+        newRounds.forEach((r, idx) => {
+          r.number = idx + 1;
+        });
+
+        set({
+          tournament: {
+            ...tournament,
+            rounds: newRounds,
+            currentRound: newRounds.length > 0 ? newRounds[newRounds.length - 1].number : 0,
+            updatedAt: new Date().toISOString(),
+          },
+          error: null,
+        });
+      },
+
       startRound: (roundId) => {
         const { tournament } = get();
         if (!tournament) return;
@@ -451,39 +542,9 @@ export const useTournamentStore = create<TournamentState & TournamentActions>()(
         
         // Pausar timer
         get().pauseTimer();
-        
-        // Verificar si debemos iniciar Top Cut automáticamente
-        const updatedTournament = get().tournament;
-        if (updatedTournament && 
-            updatedTournament.format === "SWISS_TOP_CUT" &&
-            updatedTournament.phase === "SWISS") {
-          
-          // Verificar si es momento de iniciar Top Cut
-          // Para torneos de 10+ jugadores: mínimo 6-7 rondas Swiss
-          const playerCount = updatedTournament.players.length;
-          let minSwissRounds: number;
-          
-          if (playerCount <= 8) {
-            minSwissRounds = 3;
-          } else if (playerCount <= 16) {
-            minSwissRounds = 4;
-          } else if (playerCount <= 32) {
-            minSwissRounds = 5;
-          } else if (playerCount <= 64) {
-            minSwissRounds = 6;
-          } else {
-            minSwissRounds = 7;
-          }
-          
-          // También respetar el mínimo de 6 rondas para calidad del torneo
-          minSwissRounds = Math.max(minSwissRounds, 6);
-          
-          if (updatedTournament.rounds.length >= minSwissRounds) {
-            console.log(`[Top Cut] Iniciando automáticamente después de ${updatedTournament.rounds.length} rondas`);
-            // Iniciar Top Cut automáticamente
-            get().startTopCut();
-          }
-        }
+
+        // El inicio del Top Cut ahora es manual, controlado por el administrador
+        // No iniciamos automáticamente para permitir que el host decida cuándo terminar las rondas Swiss
       },
       
       // ============================================
@@ -801,32 +862,77 @@ export const useTournamentStore = create<TournamentState & TournamentActions>()(
       generateTopCutPairings: () => {
         const { tournament, getStandings } = get();
         if (!tournament || tournament.phase !== "TOP_CUT") return;
-        
+
         const nextRoundNumber = tournament.rounds.length + 1;
         const topCutPlayers = tournament.topCutPlayers || [];
-        
+        const playThirdPlace = tournament.playThirdPlaceMatch !== false; // Default to true
+
         if (topCutPlayers.length <= 1) {
-          // Solo queda un jugador, torneo terminado
           get().finishTournament();
           return;
         }
-        
-        // Obtener standings para ordenar
+
         const standings = getStandings();
         const sortedTopCutPlayers = standings
           .filter(s => topCutPlayers.includes(s.playerId))
           .map(s => tournament.players.find(p => p.id === s.playerId)!)
           .filter(Boolean);
-        
-        // Generar pairings de eliminación directa
-        // 1ro vs último, 2do vs penúltimo, etc.
+
         const matches: Match[] = [];
         const numPlayers = sortedTopCutPlayers.length;
-        
+
+        // Si solo quedan 2 jugadores, es la final
+        if (numPlayers === 2) {
+          // Verificar si ya se jugó el partido de 3er lugar o si se debe saltar
+          const semifinalRounds = tournament.rounds.filter(r => r.number >= nextRoundNumber - 1);
+          const hasPlayedThirdPlace = semifinalRounds.some(r =>
+            r.matches.some(m => m.result !== null && m.player2Id !== null)
+          );
+
+          // Si hay 2 jugadores y no se debe jugar 3er lugar, ambos son 3ro/4to
+          if (!playThirdPlace) {
+            // Encontrar los 2 jugadores que no están en la final (perdieron en semis)
+            // Se definen como 3ro/4to sin jugar
+            console.log("[Top Cut] Partido de 3er lugar saltado, ambos jugadores son 3ro/4to");
+          }
+
+          // Crear la final
+          matches.push({
+            id: nanoid(),
+            table: 1,
+            player1Id: sortedTopCutPlayers[0].id,
+            player2Id: sortedTopCutPlayers[1].id,
+            result: null,
+            status: "PAIRED",
+            roundNumber: nextRoundNumber,
+            games: [],
+          });
+
+          // Crear la ronda
+          const newRound: Round = {
+            id: nanoid(),
+            number: nextRoundNumber,
+            matches,
+            isComplete: false,
+          };
+
+          set({
+            tournament: {
+              ...tournament,
+              rounds: [...tournament.rounds, newRound],
+              currentRound: nextRoundNumber,
+              updatedAt: new Date().toISOString(),
+            },
+            error: null,
+          });
+          return;
+        }
+
+        // Para 4+ jugadores, generar quarterfinals/semifinals normalmente
         for (let i = 0; i < Math.floor(numPlayers / 2); i++) {
           const player1 = sortedTopCutPlayers[i];
           const player2 = sortedTopCutPlayers[numPlayers - 1 - i];
-          
+
           matches.push({
             id: nanoid(),
             table: i + 1,
@@ -838,8 +944,7 @@ export const useTournamentStore = create<TournamentState & TournamentActions>()(
             games: [],
           });
         }
-        
-        // Si hay número impar, el del medio pasa automáticamente (bye)
+
         if (numPlayers % 2 === 1) {
           const middlePlayer = sortedTopCutPlayers[Math.floor(numPlayers / 2)];
           matches.push({
@@ -853,15 +958,14 @@ export const useTournamentStore = create<TournamentState & TournamentActions>()(
             games: [],
           });
         }
-        
-        // Crear la ronda
+
         const newRound: Round = {
           id: nanoid(),
           number: nextRoundNumber,
           matches,
           isComplete: false,
         };
-        
+
         set({
           tournament: {
             ...tournament,
@@ -870,6 +974,19 @@ export const useTournamentStore = create<TournamentState & TournamentActions>()(
             updatedAt: new Date().toISOString(),
           },
           error: null,
+        });
+      },
+
+      setPlayThirdPlaceMatch: (playThirdPlace) => {
+        const { tournament } = get();
+        if (!tournament) return;
+
+        set({
+          tournament: {
+            ...tournament,
+            playThirdPlaceMatch: playThirdPlace,
+            updatedAt: new Date().toISOString(),
+          },
         });
       },
     }),

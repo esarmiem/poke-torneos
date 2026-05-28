@@ -49,6 +49,7 @@ export default function SetupPage() {
     pointsTie: 1,
     pointsLoss: 0,
     isBestOfThree: false,
+    topCutSize: 4,
   });
   
   // Estado para nuevo jugador
@@ -62,6 +63,12 @@ export default function SetupPage() {
   
   // Estado para edición
   const [editingPlayer, setEditingPlayer] = useState<string | null>(null);
+  const [editingPlayerData, setEditingPlayerData] = useState<{
+    nombre: string;
+    playerId: string;
+    division: Division | "";
+    deck: string;
+  }>({ nombre: "", playerId: "", division: "", deck: "" });
   
   // Crear torneo
   const handleCreateTournament = () => {
@@ -79,10 +86,42 @@ export default function SetupPage() {
         pointsLoss: tournamentConfig.pointsLoss,
         roundTimeMinutes: tournamentConfig.roundTimeMinutes,
         isBestOfThree: tournamentConfig.isBestOfThree,
+        topCutSize: tournamentConfig.format === "SWISS_TOP_CUT" ? tournamentConfig.topCutSize : undefined,
       },
     });
   };
   
+  // Actualizar jugador (disponible durante todo el torneo)
+  const handleUpdatePlayer = () => {
+    if (!editingPlayer || !editingPlayerData.nombre.trim()) {
+      setError("El nombre del jugador es requerido");
+      return;
+    }
+    updatePlayer(editingPlayer, {
+      nombre: editingPlayerData.nombre,
+      playerId: editingPlayerData.playerId || undefined,
+      division: editingPlayerData.division || undefined,
+      deck: editingPlayerData.deck || undefined,
+    });
+    setEditingPlayer(null);
+    setEditingPlayerData({ nombre: "", playerId: "", division: "", deck: "" });
+  };
+
+  // Iniciar edición de jugador
+  const startEditPlayer = (playerId: string) => {
+    if (!tournament) return;
+    const player = tournament.players.find(p => p.id === playerId);
+    if (player) {
+      setEditingPlayer(playerId);
+      setEditingPlayerData({
+        nombre: player.nombre,
+        playerId: player.playerId || "",
+        division: player.division || "",
+        deck: player.deck || "",
+      });
+    }
+  };
+
   // Agregar jugador
   const handleAddPlayer = () => {
     if (!newPlayer.nombre.trim()) {
@@ -154,6 +193,24 @@ export default function SetupPage() {
                 <option value="SWISS_TOP_CUT">Suizo + Top Cut</option>
               </Select>
             </div>
+
+            {tournamentConfig.format === "SWISS_TOP_CUT" && (
+              <div>
+                <Label htmlFor="topCutSize">Tamaño del Top Cut</Label>
+                <Select
+                  id="topCutSize"
+                  value={tournamentConfig.topCutSize}
+                  onChange={(e) => setTournamentConfig(prev => ({ ...prev, topCutSize: parseInt(e.target.value) }))}
+                >
+                  <option value={4}>Top 4</option>
+                  <option value={8}>Top 8</option>
+                  <option value={16}>Top 16</option>
+                </Select>
+                <p className="text-xs text-slate-500 mt-1">
+                  Jugadores que pasan a la fase de eliminación directa
+                </p>
+              </div>
+            )}
             
             <div>
               <Label htmlFor="tiempo">Tiempo por ronda (minutos)</Label>
@@ -333,9 +390,7 @@ export default function SetupPage() {
                   <th className="text-left py-3 px-4 text-sm font-medium text-slate-500">División</th>
                   <th className="text-left py-3 px-4 text-sm font-medium text-slate-500">Deck</th>
                   <th className="text-left py-3 px-4 text-sm font-medium text-slate-500">Estado</th>
-                  {tournament.status === "SETUP" && (
-                    <th className="text-right py-3 px-4 text-sm font-medium text-slate-500">Acciones</th>
-                  )}
+                  <th className="text-right py-3 px-4 text-sm font-medium text-slate-500">Acciones</th>
                 </tr>
               </thead>
               <tbody>
@@ -380,44 +435,54 @@ export default function SetupPage() {
                     {(tournament.status === "SETUP" || tournament.status === "RUNNING") && (
                       <td className="py-3 px-4 text-right">
                         <div className="flex items-center justify-end gap-1">
-                          {player.dropped ? (
+                          {editingPlayer === player.id ? (
                             <Button
                               variant="ghost"
                               size="sm"
-                              onClick={() => dropPlayer(player.id)}
-                              className="text-green-600 hover:text-green-700 hover:bg-green-50"
+                              onClick={() => setEditingPlayer(null)}
+                              className="text-slate-600"
                             >
-                              Revertir Drop
+                              Cancelar
                             </Button>
                           ) : (
                             <>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => startEditPlayer(player.id)}
+                                title="Editar jugador"
+                              >
+                                <Edit2 className="w-4 h-4" />
+                              </Button>
                               {tournament.status === "SETUP" && (
-                                <>
-                                  <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    onClick={() => setEditingPlayer(player.id)}
-                                  >
-                                    <Edit2 className="w-4 h-4" />
-                                  </Button>
-                                  <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    onClick={() => removePlayer(player.id)}
-                                  >
-                                    <Trash2 className="w-4 h-4 text-red-500" />
-                                  </Button>
-                                </>
-                              )}
-                              {tournament.status === "RUNNING" && (
                                 <Button
                                   variant="ghost"
-                                  size="sm"
-                                  onClick={() => dropPlayer(player.id)}
-                                  className="text-amber-600 hover:text-amber-700 hover:bg-amber-50"
+                                  size="icon"
+                                  onClick={() => removePlayer(player.id)}
                                 >
-                                  Drop
+                                  <Trash2 className="w-4 h-4 text-red-500" />
                                 </Button>
+                              )}
+                              {tournament.status === "RUNNING" && (
+                                player.dropped ? (
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => dropPlayer(player.id)}
+                                    className="text-green-600 hover:text-green-700 hover:bg-green-50"
+                                  >
+                                    Revertir Drop
+                                  </Button>
+                                ) : (
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => dropPlayer(player.id)}
+                                    className="text-amber-600 hover:text-amber-700 hover:bg-amber-50"
+                                  >
+                                    Drop
+                                  </Button>
+                                )
                               )}
                             </>
                           )}
@@ -426,6 +491,75 @@ export default function SetupPage() {
                     )}
                   </tr>
                 ))}
+                {editingPlayer && (
+                  <tr className="bg-blue-50 border-b border-blue-200">
+                    <td colSpan={6} className="p-4">
+                      <div className="flex flex-col gap-4">
+                        <h4 className="font-medium text-blue-900 flex items-center gap-2">
+                          <Edit2 className="w-4 h-4" />
+                          Editando Jugador
+                        </h4>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div>
+                            <Label htmlFor="editNombre">Nombre *</Label>
+                            <Input
+                              id="editNombre"
+                              value={editingPlayerData.nombre}
+                              onChange={(e) => setEditingPlayerData(prev => ({ ...prev, nombre: e.target.value }))}
+                              placeholder="Nombre del jugador"
+                            />
+                          </div>
+                          <div>
+                            <Label htmlFor="editPlayerId">ID de Jugador</Label>
+                            <Input
+                              id="editPlayerId"
+                              value={editingPlayerData.playerId}
+                              onChange={(e) => setEditingPlayerData(prev => ({ ...prev, playerId: e.target.value }))}
+                              placeholder="Ej: 1234567890"
+                            />
+                          </div>
+                          <div>
+                            <Label htmlFor="editDivision">División</Label>
+                            <Select
+                              id="editDivision"
+                              value={editingPlayerData.division}
+                              onChange={(e) => setEditingPlayerData(prev => ({ ...prev, division: e.target.value as Division }))}
+                            >
+                              <option value="">Seleccionar...</option>
+                              <option value="Juniors">Juniors</option>
+                              <option value="Seniors">Seniors</option>
+                              <option value="Masters">Masters</option>
+                              <option value="Open">Open</option>
+                            </Select>
+                          </div>
+                          <div>
+                            <Label htmlFor="editDeck">Deck</Label>
+                            <Input
+                              id="editDeck"
+                              value={editingPlayerData.deck}
+                              onChange={(e) => setEditingPlayerData(prev => ({ ...prev, deck: e.target.value }))}
+                              placeholder="Ej: Charizard ex"
+                            />
+                          </div>
+                        </div>
+                        {error && (
+                          <div className="flex items-center gap-2 text-red-600 text-sm bg-red-50 p-3 rounded-lg">
+                            <AlertCircle className="w-4 h-4" />
+                            {error}
+                          </div>
+                        )}
+                        <div className="flex gap-2">
+                          <Button onClick={handleUpdatePlayer}>
+                            Guardar Cambios
+                          </Button>
+                          <Button variant="outline" onClick={() => setEditingPlayer(null)}>
+                            Cancelar
+                          </Button>
+                        </div>
+                      </div>
+                    </td>
+                  </tr>
+                )}
               </tbody>
             </table>
           </div>

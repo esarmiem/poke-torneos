@@ -93,7 +93,7 @@ export default function HomePage() {
   
   // Obtener datos para el dashboard
   const standings = getStandings();
-  const topPlayers = standings.slice(0, 5);
+  const topPlayers = standings.slice(0, 10);
   const currentRound = tournament.rounds.find(r => r.number === tournament.currentRound);
   const pendingMatches = currentRound?.matches.filter(m => m.status !== "DONE").length || 0;
   const canStartNewRound = canStartRound();
@@ -186,34 +186,43 @@ export default function HomePage() {
       <Card className="p-6">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-lg font-semibold text-slate-900">
-            Top 5 Clasificación
+            Clasificación
           </h2>
           <Button variant="ghost" size="sm" onClick={() => router.push("/standings")}>
             Ver completa
             <ArrowRight className="w-4 h-4 ml-1" />
           </Button>
         </div>
-        
+
         {topPlayers.length > 0 ? (
           <div className="space-y-2">
             {topPlayers.map((player, index) => (
               <div
                 key={player.playerId}
-                className="flex items-center justify-between p-3 bg-slate-50 rounded-lg"
+                className={cn(
+                  "flex items-center justify-between p-3 rounded-lg",
+                  player.player.dropped ? "bg-red-50/50 opacity-60" : "bg-slate-50"
+                )}
               >
                 <div className="flex items-center gap-3">
                   <span className={cn(
                     "w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold",
-                    index === 0 ? "bg-amber-100 text-amber-700" :
-                    index === 1 ? "bg-slate-200 text-slate-700" :
-                    index === 2 ? "bg-orange-100 text-orange-700" :
+                    player.rank === 1 ? "bg-amber-100 text-amber-700" :
+                    player.rank === 2 ? "bg-slate-200 text-slate-700" :
+                    player.rank === 3 ? "bg-orange-100 text-orange-700" :
                     "bg-slate-100 text-slate-600"
                   )}>
                     {player.rank}
                   </span>
-                  <span className="font-medium text-slate-900">
+                  <span className={cn(
+                    "font-medium",
+                    player.player.dropped ? "text-slate-500 line-through" : "text-slate-900"
+                  )}>
                     {player.player.nombre}
                   </span>
+                  {player.player.dropped && (
+                    <Badge variant="destructive" className="text-xs">Drop</Badge>
+                  )}
                 </div>
                 <div className="flex items-center gap-4 text-sm">
                   <span className="text-slate-500">

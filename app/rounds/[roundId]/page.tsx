@@ -4,7 +4,7 @@
 
 "use client";
 
-import { use, useState } from "react";
+import { use, useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useTournamentStore } from "@/lib/store/tournamentStore";
 import { Button } from "@/components/ui/Button";
@@ -20,7 +20,10 @@ import {
   Play,
   Pause,
   RotateCcw,
-  Trophy
+  Trophy,
+  UserMinus,
+  ArrowRight,
+  Flag
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { MatchResult } from "@/lib/domain/types";
@@ -44,7 +47,14 @@ export default function RoundDetailPage({ params }: RoundDetailPageProps) {
     startTimer,
     pauseTimer,
     resetTimer,
-    getRemainingTime
+    getRemainingTime,
+    dropPlayer,
+    createRound,
+    finishTournament,
+    shouldStartTopCut,
+    startTopCut,
+    generateTopCutPairings,
+    canStartRound
   } = useTournamentStore();
   
   const [showTimer, setShowTimer] = useState(false);
@@ -177,12 +187,59 @@ export default function RoundDetailPage({ params }: RoundDetailPageProps) {
           </Button>
         </div>
       )}
-      
+
       {isRoundComplete && !round.endedAt && (
-        <div className="flex justify-center">
+        <div className="flex flex-col sm:flex-row justify-center gap-3">
           <Button size="lg" variant="secondary" onClick={() => endRound(round.id)}>
             <CheckCircle2 className="w-5 h-5 mr-2" />
             Finalizar Ronda
+          </Button>
+          {tournament.phase === "TOP_CUT" && tournament.rounds.length >= Math.log2(tournament.settings.topCutSize || 4) && (
+            <Button size="lg" variant="outline" onClick={() => finishTournament()}>
+              <Flag className="w-5 h-5 mr-2" />
+              Finalizar Torneo
+            </Button>
+          )}
+        </div>
+      )}
+
+      {round.endedAt && canStartRound() && tournament.status === "RUNNING" && (
+        <div className="flex flex-col sm:flex-row justify-center gap-3">
+          {tournament.format === "SWISS_TOP_CUT" && tournament.phase === "SWISS" && shouldStartTopCut() && (
+            <Button size="lg" variant="default" onClick={() => { startTopCut(); generateTopCutPairings(); }}>
+              <Trophy className="w-5 h-5 mr-2" />
+              Iniciar Top {tournament.settings.topCutSize || 4}
+            </Button>
+          )}
+          {tournament.phase === "TOP_CUT" && (
+            <Button size="lg" onClick={() => {
+              const roundsBefore = tournament.rounds.length;
+              createRound();
+              setTimeout(() => {
+                const newRoundId = useTournamentStore.getState().tournament?.rounds[roundsBefore]?.id;
+                if (newRoundId) router.push(`/rounds/${newRoundId}`);
+              }, 0);
+            }}>
+              <ArrowRight className="w-5 h-5 mr-2" />
+              Siguiente Ronda
+            </Button>
+          )}
+          {tournament.phase === "SWISS" && (
+            <Button size="lg" onClick={() => {
+              const roundsBefore = tournament.rounds.length;
+              createRound();
+              setTimeout(() => {
+                const newRoundId = useTournamentStore.getState().tournament?.rounds[roundsBefore]?.id;
+                if (newRoundId) router.push(`/rounds/${newRoundId}`);
+              }, 0);
+            }}>
+              <ArrowRight className="w-5 h-5 mr-2" />
+              Siguiente Ronda
+            </Button>
+          )}
+          <Button size="lg" variant="destructive" onClick={() => finishTournament()}>
+            <Flag className="w-5 h-5 mr-2" />
+            Finalizar Torneo
           </Button>
         </div>
       )}
@@ -212,21 +269,43 @@ export default function RoundDetailPage({ params }: RoundDetailPageProps) {
                 
                 {/* Jugadores */}
                 <div className="space-y-1">
-                  <div className={cn(
-                    "font-medium",
-                    match.result === "P1_WIN" || match.result === "P1_BYE" 
-                      ? "text-blue-700 font-bold" 
-                      : "text-slate-900"
-                  )}>
-                    {getPlayerName(match.player1Id)}
+                  <div className="flex items-center gap-2">
+                    <span className={cn(
+                      "font-medium",
+                      match.result === "P1_WIN" || match.result === "P1_BYE"
+                        ? "text-blue-700 font-bold"
+                        : "text-slate-900"
+                    )}>
+                      {getPlayerName(match.player1Id)}
+                    </span>
+                    {tournament.status === "RUNNING" && !tournament.players.find(p => p.id === match.player1Id)?.dropped && match.status !== "DONE" && (
+                      <button
+                        onClick={() => dropPlayer(match.player1Id)}
+                        className="p-1 text-amber-500 hover:text-amber-700 hover:bg-amber-50 rounded transition-colors"
+                        title="Dar DROP a este jugador"
+                      >
+                        <UserMinus className="w-4 h-4" />
+                      </button>
+                    )}
                   </div>
-                  <div className={cn(
-                    "font-medium",
-                    match.result === "P2_WIN" || match.result === "P2_BYE" 
-                      ? "text-green-700 font-bold" 
-                      : "text-slate-900"
-                  )}>
-                    {match.player2Id ? getPlayerName(match.player2Id) : "BYE"}
+                  <div className="flex items-center gap-2">
+                    <span className={cn(
+                      "font-medium",
+                      match.result === "P2_WIN" || match.result === "P2_BYE"
+                        ? "text-green-700 font-bold"
+                        : "text-slate-900"
+                    )}>
+                      {match.player2Id ? getPlayerName(match.player2Id) : "BYE"}
+                    </span>
+                    {match.player2Id && tournament.status === "RUNNING" && !tournament.players.find(p => p.id === match.player2Id)?.dropped && match.status !== "DONE" && (
+                      <button
+                        onClick={() => dropPlayer(match.player2Id!)}
+                        className="p-1 text-amber-500 hover:text-amber-700 hover:bg-amber-50 rounded transition-colors"
+                        title="Dar DROP a este jugador"
+                      >
+                        <UserMinus className="w-4 h-4" />
+                      </button>
+                    )}
                   </div>
                 </div>
               </div>

@@ -11,13 +11,16 @@ import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { PokemonSprite, sprites } from "@/components/PokemonSprite";
-import { 
-  Swords, 
-  Plus, 
+import {
+  Swords,
+  Plus,
   ChevronRight,
   CheckCircle2,
   Clock,
-  AlertCircle
+  AlertCircle,
+  Trophy,
+  Flag,
+  Shuffle
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
@@ -25,11 +28,15 @@ import { es } from "date-fns/locale";
 
 export default function RoundsPage() {
   const router = useRouter();
-  const { 
-    tournament, 
-    createRound, 
+  const {
+    tournament,
+    createRound,
     canStartRound,
-    isRoundComplete 
+    isRoundComplete,
+    shouldStartTopCut,
+    startTopCut,
+    generateTopCutPairings,
+    finishTournament
   } = useTournamentStore();
   
   const [isCreating, setIsCreating] = useState(false);
@@ -71,18 +78,45 @@ export default function RoundsPage() {
             {tournament.nombre}
           </p>
         </div>
-        
-        {canCreateRound && (
-          <Button 
-            onClick={handleCreateRound}
-            disabled={isCreating}
-          >
-            <Plus className="w-4 h-4 mr-2" />
-            {isCreating ? "Creando..." : `Crear Ronda ${tournament.rounds.length + 1}`}
-          </Button>
-        )}
+
+        <div className="flex flex-wrap gap-2">
+          {tournament.status === "RUNNING" && tournament.rounds.length > 0 && (
+            <Button
+              variant="destructive"
+              size="sm"
+              onClick={() => {
+                if (confirm("¿Estás seguro de finalizar el torneo? Esta acción no se puede deshacer.")) {
+                  finishTournament();
+                }
+              }}
+            >
+              <Flag className="w-4 h-4 mr-2" />
+              Finalizar
+            </Button>
+          )}
+
+          {canCreateRound && tournament.format === "SWISS_TOP_CUT" && tournament.phase === "SWISS" && shouldStartTopCut() && (
+            <Button
+              variant="default"
+              onClick={() => { startTopCut(); generateTopCutPairings(); }}
+            >
+              <Trophy className="w-4 h-4 mr-2" />
+              Iniciar Top {tournament.settings.topCutSize || 4}
+            </Button>
+          )}
+
+          {canCreateRound && (
+            <Button
+              onClick={handleCreateRound}
+              disabled={isCreating}
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              {isCreating ? "Creando..." : `Crear Ronda ${tournament.rounds.length + 1}`}
+            </Button>
+          )}
+        </div>
       </div>
-      
+
       {/* Info si no se puede crear ronda */}
       {!canCreateRound && tournament.status === "RUNNING" && tournament.rounds.length > 0 && (
         <div className="flex items-center gap-2 text-amber-700 text-sm bg-amber-50 p-4 rounded-lg">

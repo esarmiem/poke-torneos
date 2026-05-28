@@ -81,16 +81,16 @@ export interface Tournament {
   nombre: string;
   format: TournamentFormat;
   status: TournamentStatus;
-  phase: TournamentPhase; // Para SWISS_TOP_CUT: SWISS o TOP_CUT
+  phase: TournamentPhase;
   players: Player[];
   rounds: Round[];
   settings: TournamentSettings;
   createdAt: string;
   updatedAt: string;
   currentRound: number;
-  // Datos específicos para Top Cut
-  topCutPlayers?: string[]; // IDs de jugadores que pasaron al Top Cut
-  eliminatedPlayers?: string[]; // IDs de jugadores eliminados en Top Cut
+  topCutPlayers?: string[];
+  eliminatedPlayers?: string[];
+  playThirdPlaceMatch?: boolean;
 }
 
 // ============================================
