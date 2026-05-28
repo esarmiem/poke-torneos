@@ -357,23 +357,50 @@ export default function SetupPage() {
                         <Badge variant="success">Activo</Badge>
                       )}
                     </td>
-                    {tournament.status === "SETUP" && (
+                    {(tournament.status === "SETUP" || tournament.status === "RUNNING") && (
                       <td className="py-3 px-4 text-right">
                         <div className="flex items-center justify-end gap-1">
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => setEditingPlayer(player.id)}
-                          >
-                            <Edit2 className="w-4 h-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => removePlayer(player.id)}
-                          >
-                            <Trash2 className="w-4 h-4 text-red-500" />
-                          </Button>
+                          {player.dropped ? (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => dropPlayer(player.id)}
+                              className="text-green-600 hover:text-green-700 hover:bg-green-50"
+                            >
+                              Revertir Drop
+                            </Button>
+                          ) : (
+                            <>
+                              {tournament.status === "SETUP" && (
+                                <>
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    onClick={() => setEditingPlayer(player.id)}
+                                  >
+                                    <Edit2 className="w-4 h-4" />
+                                  </Button>
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    onClick={() => removePlayer(player.id)}
+                                  >
+                                    <Trash2 className="w-4 h-4 text-red-500" />
+                                  </Button>
+                                </>
+                              )}
+                              {tournament.status === "RUNNING" && (
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => dropPlayer(player.id)}
+                                  className="text-amber-600 hover:text-amber-700 hover:bg-amber-50"
+                                >
+                                  Drop
+                                </Button>
+                              )}
+                            </>
+                          )}
                         </div>
                       </td>
                     )}

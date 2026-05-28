@@ -280,12 +280,12 @@ export const useTournamentStore = create<TournamentState & TournamentActions>()(
       dropPlayer: (playerId) => {
         const { tournament } = get();
         if (!tournament) return;
-        
+
         set({
           tournament: {
             ...tournament,
             players: tournament.players.map(p =>
-              p.id === playerId ? { ...p, dropped: true } : p
+              p.id === playerId ? { ...p, dropped: !p.dropped } : p
             ),
             updatedAt: new Date().toISOString(),
           },
