@@ -5,6 +5,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import { useTournamentStore } from "@/lib/store/tournamentStore";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { PokemonSprite, sprites } from "@/components/PokemonSprite";
@@ -24,12 +25,14 @@ import {
 
 export default function GuidePage() {
   const router = useRouter();
+  const { tournament } = useTournamentStore();
+  const backUrl = tournament ? "/setup" : "/";
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
       {/* Header */}
       <div className="flex items-center gap-4">
-        <Button variant="ghost" size="icon" onClick={() => router.push("/settings")}>
+        <Button variant="ghost" size="icon" onClick={() => router.push(backUrl)}>
           <ChevronLeft className="w-5 h-5" />
         </Button>
         <div>
@@ -367,9 +370,9 @@ export default function GuidePage() {
 
       {/* Botón de vuelta */}
       <div className="flex justify-center">
-        <Button onClick={() => router.push("/settings")} variant="outline" size="lg">
+        <Button onClick={() => router.push(backUrl)} variant="outline" size="lg">
           <ChevronLeft className="w-4 h-4 mr-2" />
-          Volver a Ajustes
+          {tournament ? "Volver a Ajustes" : "Volver al Inicio"}
         </Button>
       </div>
     </div>
