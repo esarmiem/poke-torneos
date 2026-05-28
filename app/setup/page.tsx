@@ -195,7 +195,7 @@ export default function SetupPage() {
           <h1 className="text-2xl font-bold text-slate-900 flex items-center gap-2">
             <Users className="w-6 h-6" />
             Jugadores
-            <PokemonSprite {...sprites.lucario} size="xs" variant="decorative" />
+            <PokemonSprite {...sprites.lucario} size="xl" variant="decorative" />
           </h1>
           <p className="text-slate-600 mt-1">
             {tournament.nombre}

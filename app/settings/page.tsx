@@ -91,7 +91,7 @@ export default function SettingsPage() {
         <div>
           <h1 className="text-2xl font-bold text-slate-900 flex items-center gap-2">
             Ajustes
-            <PokemonSprite {...sprites.dialga} size="xs" variant="decorative" />
+            <PokemonSprite {...sprites.dialga} size="xl" variant="decorative" />
           </h1>
           <p className="text-slate-600">
             Gestiona tu torneo y datos

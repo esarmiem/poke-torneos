@@ -48,7 +48,7 @@ export default function StandingsPage() {
           <h1 className="text-2xl font-bold text-slate-900 flex items-center gap-2">
             <Trophy className="w-6 h-6" />
             Clasificación
-            <PokemonSprite {...sprites.palkia} size="xs" variant="decorative" />
+            <PokemonSprite {...sprites.palkia} size="xl" variant="decorative" />
           </h1>
         </div>
         

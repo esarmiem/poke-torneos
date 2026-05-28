@@ -36,7 +36,7 @@ export default function GuidePage() {
           <h1 className="text-2xl font-bold text-slate-900 flex items-center gap-2">
             <BookOpen className="w-6 h-6" />
             Guía para Administradores
-            <PokemonSprite {...sprites.xerneas} size="xs" variant="decorative" />
+            <PokemonSprite {...sprites.pikachu} size="xl" variant="decorative" />
           </h1>
           <p className="text-slate-600">
             Todo lo que necesitas saber para organizar torneos como un profesional
