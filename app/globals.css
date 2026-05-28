@@ -1,5 +1,13 @@
 @import "tailwindcss";
 
+@font-face {
+  font-family: "Pokemon Outlined";
+  src: url("/Pokemon Outlined.ttf") format("truetype");
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
 @theme {
   --color-background: #ffffff;
   --color-foreground: #0f172a;
@@ -19,6 +27,7 @@
   --color-input: #e2e8f0;
   --color-ring: #2563eb;
   --radius: 0.5rem;
+  --font-pokemon: "Pokemon Outlined", sans-serif;
 }
 
 * {
