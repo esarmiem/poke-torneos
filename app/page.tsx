@@ -49,7 +49,7 @@ export default function HomePage() {
             <PokemonSprite {...sprites.mew} size="sm" />
           </div>
         </div>
-        <h1 className="text-6xl md:text-8xl font-bold text-slate-900 mb-4 font-[family-name:var(--font-pokemon)]">
+        <h1 className="text-6xl md:text-8xl font-bold text-slate-900 mb-4 font-pokemon">
           Poke Torneos{" "}
           <PokemonSprite {...sprites.lucario} size="xl" variant="decorative" className="inline-block mx-1" />
         </h1>
