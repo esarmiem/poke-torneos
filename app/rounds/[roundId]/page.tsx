@@ -58,6 +58,16 @@ export default function RoundDetailPage({ params }: RoundDetailPageProps) {
   } = useTournamentStore();
   
   const [showTimer, setShowTimer] = useState(false);
+  const [tick, setTick] = useState(0);
+
+  useEffect(() => {
+    if (roundTimerStart && !roundTimerPausedAt) {
+      const interval = setInterval(() => {
+        setTick(t => t + 1);
+      }, 1000);
+      return () => clearInterval(interval);
+    }
+  }, [roundTimerStart, roundTimerPausedAt]);
   
   if (!tournament) {
     return (
